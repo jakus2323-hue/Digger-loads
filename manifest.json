@@ -1,9 +1,10 @@
 {
   "name": "Digger Loads",
   "short_name": "Digger Loads",
+  "description": "Offline digger and bucket load tracker",
   "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#f2f4f7",
-  "theme_color": "#111827",
-  "icons": []
+  "theme_color": "#111827"
 }
