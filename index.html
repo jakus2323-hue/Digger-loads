@@ -953,7 +953,56 @@ function startLoadSync(user) {
   );
 }
 
+function startJobSync(user) {
 
+  const jobRef = doc(
+    db,
+    "users",
+    user.uid,
+    "settings",
+    "job"
+  );
+
+  onSnapshot(
+    jobRef,
+    snapshot => {
+
+      if (!snapshot.exists()) {
+        $("jobStatus").textContent =
+          "No job saved yet";
+        return;
+      }
+
+      const data = snapshot.data();
+
+      $("jobName").value =
+        data.jobName || "";
+
+      $("jobCustomer").value =
+        data.customer || "";
+
+      $("jobLocation").value =
+        data.location || "";
+
+      $("jobMaterial").value =
+        data.material || "";
+
+      $("jobStatus").textContent =
+        "☁️ Job settings synced";
+    },
+    error => {
+
+      console.log(
+        "Job settings error:",
+        error
+      );
+
+      $("jobStatus").textContent =
+        "📱 Job available locally";
+    }
+  );
+}
+  
 function startMachineSync(user) {
 
   if (stopMachineSync) {
@@ -1399,9 +1448,11 @@ onAuthStateChanged(
 
       render();
 
-      startLoadSync(user);
+startLoadSync(user);
 
-      startMachineSync(user);
+startJobSync(user);
+
+startMachineSync(user);
 
     } else {
 
