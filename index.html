@@ -6,962 +6,237 @@
 <meta name="theme-color" content="#111827">
 <link rel="manifest" href="./manifest.json">
 <title>PlantTrack</title>
-
 <style>
 *{box-sizing:border-box}
-
-body{
-margin:0;
-background:#f2f4f7;
-color:#111827;
-font-family:Arial,sans-serif
-}
-
-.app{
-max-width:520px;
-margin:auto;
-padding:14px 16px 28px
-}
-
-h1{
-text-align:center;
-margin:8px 0 16px;
-font-size:28px
-}
-
-.card{
-background:#fff;
-border-radius:18px;
-padding:15px;
-margin-bottom:13px;
-box-shadow:0 2px 8px #0001
-}
-
-.row{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px
-}
-
-label{
-font-size:14px;
-font-weight:800;
-display:block;
-margin-bottom:12px
-}
-
-input{
-width:100%;
-margin-top:5px;
-padding:13px;
-border:1px solid #cbd5e1;
-border-radius:11px;
-font-size:17px;
-background:#fff
-}
-
-button{
-width:100%;
-min-height:58px;
-border:0;
-border-radius:13px;
-padding:12px 8px;
-font-size:17px;
-font-weight:800
-}
-
-.primary{
-background:#111827;
-color:#fff
-}
-
-.green{
-background:#16a34a;
-color:#fff
-}
-
-.danger{
-background:#fee2e2;
-color:#991b1b
-}
-
-.small{
-font-size:14px;
-color:#64748b
-}
-
-.sync{
-font-size:13px;
-text-align:center;
-color:#64748b;
-margin:8px 0 14px
-}
-
-.current{
-text-align:center
-}
-
-.number{
-font-size:66px;
-font-weight:900;
-line-height:1.05;
-margin:5px 0
-}
-
-.tonnes{
-font-size:22px;
-font-weight:800
-}
-
-.status{
-padding:11px;
-border-radius:11px;
-margin:10px 0;
-font-weight:800
-}
-
-.buttons{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:9px
-}
-
-.buttons button{
-width:auto
-}
-
-.stats{
-display:grid;
-grid-template-columns:repeat(3,1fr);
-text-align:center
-}
-
-.stat b{
-display:block;
-font-size:25px
-}
-
-.load{
-border-top:1px solid #e5e7eb;
-padding:11px 0
-}
-
-.load:first-child{
-border-top:0
-}
-
-.loadname{
-font-size:18px;
-font-weight:900
-}
-
-.muted{
-font-size:13px;
-color:#64748b;
-margin-top:3px
-}
-
-.empty{
-color:#64748b;
-padding-top:10px
-}
-
-.error{
-color:#b91c1c;
-font-weight:700;
-margin:8px 0
-}
-
-.userbar{
-display:flex;
-justify-content:space-between;
-align-items:center;
-gap:10px;
-margin-bottom:12px
-}
-
-.userbar button{
-width:auto;
-min-height:44px;
-font-size:14px;
-padding:8px 12px
-}
-
-.hidden{
-display:none
-}
-
-@media(max-width:360px){
-.number{
-font-size:58px
-}
-}
+body{margin:0;background:#f2f4f7;color:#111827;font-family:Arial,sans-serif}
+.app{max-width:520px;margin:auto;padding:14px 16px 28px}
+h1{text-align:center;margin:8px 0 16px;font-size:28px}
+.card{background:#fff;border-radius:18px;padding:15px;margin-bottom:13px;box-shadow:0 2px 8px #0001}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{font-size:14px;font-weight:800;display:block;margin-bottom:12px}
+input{width:100%;margin-top:5px;padding:13px;border:1px solid #cbd5e1;border-radius:11px;font-size:17px;background:#fff}
+button{width:100%;min-height:58px;border:0;border-radius:13px;padding:12px 8px;font-size:17px;font-weight:800}
+.primary{background:#111827;color:#fff}.green{background:#16a34a;color:#fff}
+.danger{background:#fee2e2;color:#991b1b}
+.small{font-size:14px;color:#64748b}.sync{font-size:13px;text-align:center;color:#64748b;margin:8px 0 14px}
+.current{text-align:center}.number{font-size:66px;font-weight:900;line-height:1.05;margin:5px 0}
+.tonnes{font-size:22px;font-weight:800}.status{padding:11px;border-radius:11px;margin:10px 0;font-weight:800}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px}.buttons button{width:auto}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);text-align:center}.stat b{display:block;font-size:25px}
+.load{border-top:1px solid #e5e7eb;padding:11px 0}.load:first-child{border-top:0}
+.loadname{font-size:18px;font-weight:900}.muted{font-size:13px;color:#64748b;margin-top:3px}
+.empty{color:#64748b;padding-top:10px}.error{color:#b91c1c;font-weight:700;margin:8px 0}
+.userbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.userbar button{width:auto;min-height:44px;font-size:14px;padding:8px 12px}
+.hidden{display:none}
+@media(max-width:360px){.number{font-size:58px}}
 </style>
 </head>
-
 <body>
-
 <main class="app">
-
 <h1>🚜 PlantTrack</h1>
 
 <section id="loginCard" class="card">
-
 <h2>🔐 Sign in</h2>
-
-<p class="small">
-Sign in to use your PlantTrack account.
-</p>
-
-<label>
-Email
-<input
-id="email"
-type="email"
-autocomplete="email"
-placeholder="Your email">
-</label>
-
-<label>
-Password
-<input
-id="password"
-type="password"
-autocomplete="current-password"
-placeholder="Your password">
-</label>
-
+<p class="small">Sign in to use your PlantTrack account.</p>
+<label>Email<input id="email" type="email" autocomplete="email" placeholder="Your email"></label>
+<label>Password<input id="password" type="password" autocomplete="current-password" placeholder="Your password"></label>
 <div id="loginError" class="error"></div>
-
-<button id="login" class="primary">
-SIGN IN
-</button>
-
+<button id="login" class="primary">SIGN IN</button>
 </section>
-
 
 <section id="appArea" class="hidden">
-
 <div class="userbar">
-
 <div class="small" id="signedInAs"></div>
-
-<button id="logout" class="danger">
-SIGN OUT
-</button>
-
+<button id="logout" class="danger">SIGN OUT</button>
 </div>
-
-
-<div id="syncStatus" class="sync">
-Connecting…
-</div>
-
+<div id="syncStatus" class="sync">Connecting…</div>
 
 <section class="card">
-
 <div class="row">
-
-<label>
-Machine
-<input
-id="machine"
-value="Excavator"
-autocomplete="off">
-</label>
-
-<label>
-Bucket size (t)
-<input
-id="bucketSize"
-type="number"
-step="0.01"
-min="0.01"
-value="0.65">
-</label>
-
+<label>Machine<input id="machine" value="Excavator" autocomplete="off"></label>
+<label>Bucket size (t)<input id="bucketSize" type="number" step="0.01" min="0.01" value="0.65"></label>
 </div>
-
 <br>
-
-<label>
-Target per load (t)
-<input
-id="target"
-type="number"
-step="0.05"
-min="0.01"
-value="2.00">
-</label>
-
+<label>Target per load (t)<input id="target" type="number" step="0.05" min="0.01" value="2.00"></label>
 </section>
-
 
 <section class="card current">
-
-<div class="small">
-CURRENT LOAD
-</div>
-
-<div id="loadNo" class="small">
-Load 1
-</div>
-
-<div class="number" id="buckets">
-0
-</div>
-
-<div class="small">
-BUCKETS
-</div>
-
-<div class="tonnes" id="estimate">
-0.00 t
-</div>
-
-<div class="status" id="status">
-Add a bucket
-</div>
-
+<div class="small">CURRENT LOAD</div>
+<div id="loadNo" class="small">Load 1</div>
+<div class="number" id="buckets">0</div>
+<div class="small">BUCKETS</div>
+<div class="tonnes" id="estimate">0.00 t</div>
+<div class="status" id="status">Add a bucket</div>
 <div class="buttons">
-
-<button id="minus">
-− BUCKET
-</button>
-
-<button id="plus" class="primary">
-+ BUCKET
-</button>
-
+<button id="minus">− BUCKET</button>
+<button id="plus" class="primary">+ BUCKET</button>
 </div>
-
-<button
-id="finish"
-class="green"
-style="margin-top:9px">
-
-✅ FINISH LOAD
-
-</button>
-
+<button id="finish" class="green" style="margin-top:9px">✅ FINISH LOAD</button>
 </section>
 
-
 <section class="card">
-
-<div class="small">
-TODAY'S TOTAL
-</div>
-
+<div class="small">TODAY'S TOTAL</div>
 <div class="stats">
-
-<div class="stat">
-<b id="totalLoads">0</b>
-Loads
+<div class="stat"><b id="totalLoads">0</b>Loads</div>
+<div class="stat"><b id="totalBuckets">0</b>Buckets</div>
+<div class="stat"><b id="totalTonnes">0.00</b>Tonnes</div>
 </div>
-
-<div class="stat">
-<b id="totalBuckets">0</b>
-Buckets
-</div>
-
-<div class="stat">
-<b id="totalTonnes">0.00</b>
-Tonnes
-</div>
-
-</div>
-
 </section>
 
-
-<section class="card">
-
-<strong>
-Load history
-</strong>
-
-<div id="history"></div>
-
+<section class="card"><strong>Load history</strong><div id="history"></div></section>
+<button id="reset" class="danger">RESET TODAY</button>
 </section>
-
-
-<button id="reset" class="danger">
-RESET TODAY
-</button>
-
-</section>
-
 </main>
 
-
 <script type="module">
-
-import {
-initializeApp
-}
-from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-
-
-import {
-getAuth,
-onAuthStateChanged,
-signInWithEmailAndPassword,
-signOut
-}
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut}
 from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-
-
-import {
-getFirestore,
-collection,
-addDoc,
-serverTimestamp,
-enableIndexedDbPersistence
-}
+import {getFirestore,collection,addDoc,serverTimestamp,enableIndexedDbPersistence,onSnapshot,query,where}
 from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
-
-const firebaseConfig = {
-
-apiKey:
-"AIzaSyAhnQ5H8ZO6MrY2KdUIN_baTY18iJGvvk0",
-
-authDomain:
-"planttrack-f1cd6.firebaseapp.com",
-
-projectId:
-"planttrack-f1cd6",
-
-storageBucket:
-"planttrack-f1cd6.firebasestorage.app",
-
-messagingSenderId:
-"1033337379582",
-
-appId:
-"1:1033337379582:web:bdd0315e9bf0ed9420e3af"
-
+const firebaseConfig={
+apiKey:"AIzaSyAhnQ5H8ZO6MrY2KdUIN_baTY18iJGvvk0",
+authDomain:"planttrack-f1cd6.firebaseapp.com",
+projectId:"planttrack-f1cd6",
+storageBucket:"planttrack-f1cd6.firebasestorage.app",
+messagingSenderId:"1033337379582",
+appId:"1:1033337379582:web:bdd0315e9bf0ed9420e3af"
 };
 
-
-const app = initializeApp(firebaseConfig);
-
-const auth = getAuth(app);
-
-const db = getFirestore(app);
-
-
-const KEY = "diggerLoadsV2";
-
-const today = () =>
-new Date().toISOString().slice(0,10);
-
-const $ = id =>
-document.getElementById(id);
-
-
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+const KEY="diggerLoadsV2";
+const today=()=>new Date().toISOString().slice(0,10);
+const $=id=>document.getElementById(id);
 let state;
+let currentBuckets=0;let stopCloudSync=null;
 
-let currentBuckets = 0;
+try{state=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){state=null}
+if(!state||state.date!==today())state={date:today(),loads:[]};
 
-
-try{
-
-state =
-JSON.parse(
-localStorage.getItem(KEY) || "null"
-);
-
-}catch(e){
-
-state = null;
-
-}
-
-
-if(
-!state ||
-state.date !== today()
-){
-
-state = {
-date:today(),
-loads:[]
-};
-
-}
-
-
-function saveLocal(){
-
-try{
-
-localStorage.setItem(
-KEY,
-JSON.stringify(state)
-);
-
-}catch(e){}
-
-}
-
-
-function val(id,f){
-
-let n =
-parseFloat($(id).value);
-
-return Number.isFinite(n) && n > 0
-? n
-: f;
-
-}
-
-
-function esc(s){
-
-return String(s).replace(
-/[&<>"']/g,
-c => ({
-"&":"&amp;",
-"<":"&lt;",
-">":"&gt;",
-'"':"&quot;",
-"'":"&#39;"
-}[c])
-);
-
-}
-
-
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function val(id,f){let n=parseFloat($(id).value);return Number.isFinite(n)&&n>0?n:f}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function render(){
-
-let bs =
-val("bucketSize",.65);
-
-let target =
-val("target",2);
-
-let est =
-currentBuckets * bs;
-
-
-$("buckets").textContent =
-currentBuckets;
-
-$("estimate").textContent =
-est.toFixed(2) + " t";
-
-
-$("loadNo").textContent =
-"Load " + (state.loads.length + 1);
-
-
-$("status").textContent =
-!currentBuckets
-? "Add a bucket"
-
-: est < target-.05
-? "⬇ UNDER — " +
-(target-est).toFixed(2) +
-" t to target"
-
-: est > target+.05
-? "⬆ OVER — " +
-(est-target).toFixed(2) +
-" t over target"
-
-: "✅ ON TARGET";
-
-
-let b = 0;
-
-let t = 0;
-
-
-state.loads.forEach(x => {
-
-b += x.buckets;
-
-t += x.tonnes;
-
-});
-
-
-$("totalLoads").textContent =
-state.loads.length;
-
-$("totalBuckets").textContent =
-b;
-
-$("totalTonnes").textContent =
-t.toFixed(2);
-
-
-$("history").innerHTML =
-state.loads.length
-
-? state.loads
-.slice()
-.reverse()
-.map(x =>
-
-`<div class="load">
-
-<div class="loadname">
-${esc(x.name)}
-</div>
-
-<div>
-${x.buckets} buckets —
-${Number(x.tonnes).toFixed(2)} t
-</div>
-
-<div class="muted">
-${esc(x.machine)} • ${esc(x.time)}
-</div>
-
-</div>`
-
-)
-.join("")
-
-:
-
+let bs=val("bucketSize",.65),target=val("target",2),est=currentBuckets*bs;
+$("buckets").textContent=currentBuckets;
+$("estimate").textContent=est.toFixed(2)+" t";
+$("loadNo").textContent="Load "+(state.loads.length+1);
+$("status").textContent=!currentBuckets?"Add a bucket":
+est<target-.05?"⬇ UNDER — "+(target-est).toFixed(2)+" t to target":
+est>target+.05?"⬆ OVER — "+(est-target).toFixed(2)+" t over target":"✅ ON TARGET";
+let b=0,t=0;state.loads.forEach(x=>{b+=x.buckets;t+=x.tonnes});
+$("totalLoads").textContent=state.loads.length;
+$("totalBuckets").textContent=b;
+$("totalTonnes").textContent=t.toFixed(2);
+$("history").innerHTML=state.loads.length?
+state.loads.slice().reverse().map(x=>`<div class="load"><div class="loadname">${esc(x.name)}</div><div>${x.buckets} buckets — ${Number(x.tonnes).toFixed(2)} t</div><div class="muted">${esc(x.machine)} • ${esc(x.time)}</div></div>`).join(""):
 '<div class="empty">No loads recorded yet.</div>';
-
 }
-
 
 async function cloudSave(load){
-
-if(!navigator.onLine)
-return;
-
-
-const user =
-auth.currentUser;
-
-if(!user)
-return;
-
-
+if(!navigator.onLine)return;
+const user=auth.currentUser;
+if(!user)return;
 try{
-
-await addDoc(
-collection(db,"loads"),
-{
-
-...load,
-
-date:today(),
-
-uid:user.uid,
-
-createdAt:
-serverTimestamp()
-
-}
-);
-
-
-$("syncStatus").textContent =
-"☁️ Saved to PlantTrack cloud";
-
-
+await addDoc(collection(db,"loads"),{...load,date:today(),uid:user.uid,createdAt:serverTimestamp()});
+$("syncStatus").textContent="☁️ Saved to PlantTrack cloud";
 }catch(e){
-
-$("syncStatus").textContent =
-"📱 Saved on device — cloud waiting";
-
-console.log(
-"Firestore save:",
-e
-);
-
+$("syncStatus").textContent="📱 Saved on device — cloud waiting";
+console.log("Firestore save:",e);
 }
-
 }
 
 
-$("login").onclick =
-async () => {
-
-$("loginError").textContent = "";
-
-const email =
-$("email").value.trim();
-
-const password =
-$("password").value;
-
-
-if(!email || !password){
-
-$("loginError").textContent =
-"Enter your email and password.";
-
-return;
-
+function startCloudSync(user){
+if(stopCloudSync){stopCloudSync();stopCloudSync=null}
+const q=query(collection(db,"loads"),where("uid","==",user.uid),where("date","==",today()));
+stopCloudSync=onSnapshot(q,snapshot=>{
+const cloud=snapshot.docs.map(doc=>({id:doc.id,...doc.data()})).sort((a,b)=>(a.createdAt?.toMillis?.()||0)-(b.createdAt?.toMillis?.()||0));
+const merged=state.loads.slice();
+cloud.forEach(x=>{
+const exists=merged.some(y=>y.id===x.id||(y.name===x.name&&y.buckets===Number(x.buckets)&&Number(y.tonnes)===Number(x.tonnes)&&y.machine===x.machine&&y.time===x.time));
+if(!exists)merged.push({id:x.id,name:x.name,buckets:Number(x.buckets)||0,tonnes:Number(x.tonnes)||0,machine:x.machine||"Excavator",time:x.time||""});
+});
+state.loads=merged;saveLocal();render();$("syncStatus").textContent="☁️ Cloud history synced";
+},error=>{console.log("Cloud sync:",error);$("syncStatus").textContent="📱 Local history — cloud sync unavailable"});
 }
 
-
+$("login").onclick=async()=>{
+$("loginError").textContent="";
+const email=$("email").value.trim();
+const password=$("password").value;
+if(!email||!password){$("loginError").textContent="Enter your email and password.";return}
 try{
-
-$("login").disabled = true;
-
-$("login").textContent =
-"SIGNING IN…";
-
-
-await signInWithEmailAndPassword(
-auth,
-email,
-password
-);
-
-
+$("login").disabled=true;
+$("login").textContent="SIGNING IN…";
+await signInWithEmailAndPassword(auth,email,password);
 }catch(e){
-
-$("loginError").textContent =
-"Sign-in failed. Check your email and password.";
-
+$("loginError").textContent="Sign-in failed. Check your email and password.";
 }finally{
-
-$("login").disabled = false;
-
-$("login").textContent =
-"SIGN IN";
-
+$("login").disabled=false;
+$("login").textContent="SIGN IN";
 }
-
 };
 
+$("logout").onclick=()=>signOut(auth);
+$("plus").onclick=()=>{currentBuckets++;render()};
+$("minus").onclick=()=>{if(currentBuckets)currentBuckets--;render()};
 
-$("logout").onclick =
-() => signOut(auth);
-
-
-$("plus").onclick =
-() => {
-
-currentBuckets++;
-
-render();
-
+$("finish").onclick=()=>{
+if(!currentBuckets){alert("Add at least one bucket first.");return}
+let name=prompt("Name this load / customer:","");
+if(name===null)return;
+let bs=val("bucketSize",.65);
+let load={
+name:name.trim()||"Unnamed load",
+buckets:currentBuckets,
+tonnes:currentBuckets*bs,
+machine:$("machine").value.trim()||"Excavator",
+time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})
 };
-
-
-$("minus").onclick =
-() => {
-
-if(currentBuckets)
-currentBuckets--;
-
-render();
-
-};
-
-
-$("finish").onclick =
-() => {
-
-if(!currentBuckets){
-
-alert(
-"Add at least one bucket first."
-);
-
-return;
-
-}
-
-
-let name =
-prompt(
-"Name this load / customer:",
-""
-);
-
-
-if(name === null)
-return;
-
-
-let bs =
-val("bucketSize",.65);
-
-
-let load = {
-
-name:
-name.trim() || "Unnamed load",
-
-buckets:
-currentBuckets,
-
-tonnes:
-currentBuckets * bs,
-
-machine:
-$("machine").value.trim() ||
-"Excavator",
-
-time:
-new Date().toLocaleTimeString(
-[],
-{
-hour:"2-digit",
-minute:"2-digit"
-}
-)
-
-};
-
-
 state.loads.push(load);
-
-currentBuckets = 0;
-
+currentBuckets=0;
 saveLocal();
-
 render();
-
 cloudSave(load);
-
 };
 
-
-$("reset").onclick =
-() => {
-
-if(
-confirm(
-"Reset today's loads? This cannot be undone locally."
-)
-){
-
-state = {
-date:today(),
-loads:[]
-};
-
-currentBuckets = 0;
-
+$("reset").onclick=()=>{
+if(confirm("Reset today's loads? This cannot be undone locally.")){
+state={date:today(),loads:[]};
+currentBuckets=0;
 saveLocal();
-
 render();
-
 }
-
 };
 
+["bucketSize","target"].forEach(id=>$(id).addEventListener("input",render));
+window.addEventListener("online",()=>{$("syncStatus").textContent="🌐 Online — PlantTrack ready"});
+window.addEventListener("offline",()=>{$("syncStatus").textContent="📱 Offline — loads saved on this device"});
 
-["bucketSize","target"]
-.forEach(id =>
-$(id).addEventListener(
-"input",
-render
-)
-);
+try{await enableIndexedDbPersistence(db)}catch(e){console.log("Offline persistence:",e)}
 
-
-window.addEventListener(
-"online",
-() => {
-
-$("syncStatus").textContent =
-"🌐 Online — PlantTrack ready";
-
-}
-);
-
-
-window.addEventListener(
-"offline",
-() => {
-
-$("syncStatus").textContent =
-"📱 Offline — loads saved on this device";
-
-}
-);
-
-
-try{
-
-await enableIndexedDbPersistence(db);
-
-}catch(e){
-
-console.log(
-"Offline persistence:",
-e
-);
-
-}
-
-
-onAuthStateChanged(
-auth,
-user => {
-
+onAuthStateChanged(auth,user=>{
 if(user){
-
-$("loginCard")
-.classList.add("hidden");
-
-$("appArea")
-.classList.remove("hidden");
-
-$("signedInAs").textContent =
-"Signed in: " + user.email;
-
-
-$("syncStatus").textContent =
-navigator.onLine
-
-? "🌐 Online — PlantTrack connected"
-
-: "📱 Offline — loads saved on this device";
-
-
-render();
-
+$("loginCard").classList.add("hidden");
+$("appArea").classList.remove("hidden");
+$("signedInAs").textContent="Signed in: "+user.email;
+$("syncStatus").textContent=navigator.onLine?"🌐 Online — PlantTrack connected":"📱 Offline — loads saved on this device";
+render();startCloudSync(user);
 }else{
-
-$("loginCard")
-.classList.remove("hidden");
-
-$("appArea")
-.classList.add("hidden");
-
+if(stopCloudSync){stopCloudSync();stopCloudSync=null}
+$("loginCard").classList.remove("hidden");
+$("appArea").classList.add("hidden");
 }
+});
 
+if("serviceWorker"in navigator){
+window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{scope:"./"}).catch(()=>{}));
 }
-);
-
-
-if("serviceWorker" in navigator){
-
-window.addEventListener(
-"load",
-() => {
-
-navigator.serviceWorker
-.register(
-"./sw.js",
-{scope:"./"}
-)
-.catch(() => {});
-
-}
-);
-
-}
-
 </script>
-
 </body>
 </html>
