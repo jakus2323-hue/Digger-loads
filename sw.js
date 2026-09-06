@@ -1,4 +1,4 @@
-const CACHE="planttrack-login-v2";
+const CACHE="planttrack-login-v3";
 
 const ASSETS=[
   "./",
