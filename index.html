@@ -559,1022 +559,765 @@ RESET TODAY
 
 </main>
 
-
 <script type="module">
 
-import {
-initializeApp
-}
-from
-"https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
 
 import {
-getAuth,
-onAuthStateChanged,
-signInWithEmailAndPassword,
-signOut
-}
-from
-"https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
-
+  getAuth,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
 import {
-getFirestore,
-collection,
-addDoc,
-serverTimestamp,
-enableIndexedDbPersistence,
-onSnapshot,
-query,
-where,
-doc,
-setDoc
-}
-from
-"https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+  getFirestore,
+  collection,
+  addDoc,
+  serverTimestamp,
+  onSnapshot,
+  query,
+  where,
+  doc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 
-const firebaseConfig={
-
-apiKey:
-"AIzaSyAhnQ5H8ZO6MrY2KdUIN_baTY18iJGvvk0",
-
-authDomain:
-"planttrack-f1cd6.firebaseapp.com",
-
-projectId:
-"planttrack-f1cd6",
-
-storageBucket:
-"planttrack-f1cd6.firebasestorage.app",
-
-messagingSenderId:
-"1033337379582",
-
-appId:
-"1:1033337379582:web:bdd0315e9bf0ed9420e3af"
-
+const firebaseConfig = {
+  apiKey: "AIzaSyAhnQ5H8ZO6MrY2KdUIN_baTY18iJGvvk0",
+  authDomain: "planttrack-f1cd6.firebaseapp.com",
+  projectId: "planttrack-f1cd6",
+  storageBucket: "planttrack-f1cd6.firebasestorage.app",
+  messagingSenderId: "1033337379582",
+  appId: "1:1033337379582:web:bdd0315e9bf0ed9420e3af"
 };
 
 
-const app=
-initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const auth=
-getAuth(app);
+const KEY = "diggerLoadsV2";
 
-const db=
-getFirestore(app);
+const $ = id => document.getElementById(id);
 
+const today = () =>
+  new Date().toISOString().slice(0,10);
 
-const KEY=
-"diggerLoadsV2";
-
-
-const today=()=>
-new Date()
-.toISOString()
-.slice(0,10);
-
-
-const $=id=>
-document.getElementById(id);
-
-
-let state;
-
-let currentBuckets=0;
-
-let stopCloudSync=null;
-
-let stopMachineSync=null;
-
-
-try{
-
-state=
-JSON.parse(
-localStorage.getItem(KEY)||"null"
-);
-
-}catch(e){
-
-state=null;
-
-}
-
-
-if(
-!state ||
-state.date!==today()
-){
-
-state={
-date:today(),
-loads:[]
+let currentBuckets = 0;
+let state = {
+  date: today(),
+  loads: []
 };
 
+let stopLoadSync = null;
+let stopMachineSync = null;
+
+
+try {
+  const saved = JSON.parse(
+    localStorage.getItem(KEY) || "null"
+  );
+
+  if (saved && saved.date === today()) {
+    state = saved;
+  }
+} catch (e) {}
+
+
+function saveLocal() {
+  try {
+    localStorage.setItem(
+      KEY,
+      JSON.stringify(state)
+    );
+  } catch (e) {}
 }
 
 
-function saveLocal(){
-
-try{
-
-localStorage.setItem(
-KEY,
-JSON.stringify(state)
-);
-
-}catch(e){}
-
+function number(id, fallback) {
+  const n = parseFloat($(id).value);
+  return Number.isFinite(n) && n > 0
+    ? n
+    : fallback;
 }
 
 
-function val(id,f){
-
-let n=
-parseFloat(
-$(id).value
-);
-
-return Number.isFinite(n)&&n>0
-?n:f;
-
+function escapeHtml(value) {
+  return String(value).replace(
+    /[&<>"']/g,
+    character => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[character])
+  );
 }
 
 
-function esc(s){
+function render() {
 
-return String(s).replace(
-/[&<>"']/g,
-c=>({
+  const bucketSize =
+    number("bucketSize", 0.65);
 
-"&":"&amp;",
-"<":"&lt;",
-">":"&gt;",
-'"':"&quot;",
-"'":"&#39;"
+  const target =
+    number("target", 2);
 
-}[c])
-);
+  const estimate =
+    currentBuckets * bucketSize;
 
+
+  $("buckets").textContent =
+    currentBuckets;
+
+  $("estimate").textContent =
+    estimate.toFixed(2) + " t";
+
+  $("loadNo").textContent =
+    "Load " + (state.loads.length + 1);
+
+
+  if (!currentBuckets) {
+
+    $("status").textContent =
+      "Add a bucket";
+
+  } else if (estimate < target - 0.05) {
+
+    $("status").textContent =
+      "⬇ UNDER — " +
+      (target - estimate).toFixed(2) +
+      " t to target";
+
+  } else if (estimate > target + 0.05) {
+
+    $("status").textContent =
+      "⬆ OVER — " +
+      (estimate - target).toFixed(2) +
+      " t over target";
+
+  } else {
+
+    $("status").textContent =
+      "✅ ON TARGET";
+  }
+
+
+  let buckets = 0;
+  let tonnes = 0;
+
+
+  state.loads.forEach(load => {
+
+    buckets += Number(load.buckets) || 0;
+    tonnes += Number(load.tonnes) || 0;
+
+  });
+
+
+  $("totalLoads").textContent =
+    state.loads.length;
+
+  $("totalBuckets").textContent =
+    buckets;
+
+  $("totalTonnes").textContent =
+    tonnes.toFixed(2);
+
+
+  $("dayLoads").textContent =
+    state.loads.length;
+
+  $("dayBuckets").textContent =
+    buckets;
+
+  $("dayTonnes").textContent =
+    tonnes.toFixed(2);
+
+
+  $("dayAverage").textContent =
+    state.loads.length
+      ? (tonnes / state.loads.length).toFixed(2) + " t"
+      : "0.00 t";
+
+
+  $("dayMachine").textContent =
+    $("machineName").value.trim() || "—";
+
+
+  if (!state.loads.length) {
+
+    $("history").innerHTML =
+      '<div class="empty">No loads recorded yet.</div>';
+
+  } else {
+
+    $("history").innerHTML =
+      state.loads
+        .slice()
+        .reverse()
+        .map(load => `
+
+          <div class="load">
+
+            <div class="loadname">
+              ${escapeHtml(load.name)}
+            </div>
+
+            <div>
+              ${load.buckets} buckets —
+              ${Number(load.tonnes).toFixed(2)} t
+            </div>
+
+            <div class="muted">
+              ${escapeHtml(load.machine || "")}
+              •
+              ${escapeHtml(load.time || "")}
+            </div>
+
+          </div>
+
+        `)
+        .join("");
+  }
 }
 
 
-function render(){
+async function saveLoadToCloud(load) {
 
-let bs=
-val("bucketSize",.65);
+  const user = auth.currentUser;
 
-let target=
-val("target",2);
-
-let est=
-currentBuckets*bs;
+  if (!user || !navigator.onLine) {
+    return;
+  }
 
 
-$("buckets").textContent=
-currentBuckets;
+  try {
 
-$("estimate").textContent=
-est.toFixed(2)+" t";
-
-
-$("loadNo").textContent=
-"Load "+(state.loads.length+1);
-
-
-$("status").textContent=
-!currentBuckets
-?"Add a bucket":
-
-est<target-.05
-?"⬇ UNDER — "+
-(target-est).toFixed(2)+
-" t to target":
-
-est>target+.05
-?"⬆ OVER — "+
-(est-target).toFixed(2)+
-" t over target":
-
-"✅ ON TARGET";
+    await addDoc(
+      collection(db, "loads"),
+      {
+        name: load.name,
+        buckets: load.buckets,
+        tonnes: load.tonnes,
+        machine: load.machine,
+        time: load.time,
+        date: today(),
+        uid: user.uid,
+        createdAt: serverTimestamp()
+      }
+    );
 
 
-let b=0;
+    $("syncStatus").textContent =
+      "☁️ Saved to PlantTrack cloud";
 
-let t=0;
+  } catch (error) {
 
+    console.log(
+      "Load cloud save error:",
+      error
+    );
 
-state.loads.forEach(x=>{
-
-b+=Number(x.buckets)||0;
-
-t+=Number(x.tonnes)||0;
-
-});
-
-
-$("totalLoads").textContent=
-state.loads.length;
-
-$("totalBuckets").textContent=
-b;
-
-$("totalTonnes").textContent=
-t.toFixed(2);
-
-
-$("dayLoads").textContent=
-state.loads.length;
-
-$("dayBuckets").textContent=
-b;
-
-$("dayTonnes").textContent=
-t.toFixed(2);
-
-
-$("dayAverage").textContent=
-state.loads.length
-?
-(t/state.loads.length)
-.toFixed(2)+" t"
-:
-"0.00 t";
-
-
-$("dayMachine").textContent=
-$("machineName").value.trim()
-||"—";
-
-
-$("history").innerHTML=
-state.loads.length
-
-?
-
-state.loads
-.slice()
-.reverse()
-.map(x=>
-
-`<div class="load">
-
-<div class="loadname">
-
-${esc(x.name)}
-
-</div>
-
-<div>
-
-${x.buckets}
-buckets —
-${Number(x.tonnes).toFixed(2)}
-t
-
-</div>
-
-<div class="muted">
-
-${esc(x.machine)}
-•
-${esc(x.time)}
-
-</div>
-
-</div>`
-
-)
-.join("")
-
-:
-
-'<div class="empty">
-No loads recorded yet.
-</div>';
-
+    $("syncStatus").textContent =
+      "📱 Saved on device — cloud waiting";
+  }
 }
 
 
-async function cloudSave(load){
+function startLoadSync(user) {
 
-if(!navigator.onLine)
-return;
+  if (stopLoadSync) {
+    stopLoadSync();
+  }
 
 
-const user=
-auth.currentUser;
+  const loadQuery = query(
+    collection(db, "loads"),
+    where("uid", "==", user.uid),
+    where("date", "==", today())
+  );
 
-if(!user)
-return;
 
+  stopLoadSync = onSnapshot(
+    loadQuery,
 
-try{
+    snapshot => {
 
-await addDoc(
-collection(db,"loads"),
-{
+      snapshot.docs.forEach(firebaseDoc => {
 
-...load,
+        const data = firebaseDoc.data();
 
-date:today(),
+        const exists =
+          state.loads.some(
+            load => load.id === firebaseDoc.id
+          );
 
-uid:user.uid,
 
-createdAt:
-serverTimestamp()
+        if (!exists) {
 
-}
-);
+          state.loads.push({
 
+            id: firebaseDoc.id,
 
-$("syncStatus").textContent=
-"☁️ Saved to PlantTrack cloud";
+            name: data.name || "Unnamed load",
 
+            buckets:
+              Number(data.buckets) || 0,
 
-}catch(e){
+            tonnes:
+              Number(data.tonnes) || 0,
 
-$("syncStatus").textContent=
-"📱 Saved on device — cloud waiting";
+            machine:
+              data.machine || "Excavator",
 
-console.log(
-"Firestore save:",
-e
-);
+            time:
+              data.time || ""
 
-}
+          });
+        }
+      });
 
-}
 
+      saveLocal();
+      render();
 
-function startCloudSync(user){
 
-if(stopCloudSync){
+      $("syncStatus").textContent =
+        "☁️ Cloud history synced";
+    },
 
-stopCloudSync();
+    error => {
 
-stopCloudSync=null;
+      console.log(
+        "Cloud history error:",
+        error
+      );
 
-}
-
-
-const q=
-query(
-
-collection(db,"loads"),
-
-where(
-"uid",
-"==",
-user.uid
-),
-
-where(
-"date",
-"==",
-today()
-)
-
-);
-
-
-stopCloudSync=
-onSnapshot(
-q,
-
-snapshot=>{
-
-const cloud=
-snapshot.docs
-.map(doc=>({
-
-id:doc.id,
-
-...doc.data()
-
-}))
-.sort(
-(a,b)=>
-(a.createdAt?.toMillis?.()||0)-
-(b.createdAt?.toMillis?.()||0)
-);
-
-
-const merged=
-state.loads.slice();
-
-
-cloud.forEach(x=>{
-
-const exists=
-merged.some(y=>
-
-y.id===x.id ||
-
-(
-
-y.name===x.name &&
-
-y.buckets===
-Number(x.buckets) &&
-
-Number(y.tonnes)===
-Number(x.tonnes) &&
-
-y.machine===
-x.machine &&
-
-y.time===
-x.time
-
-)
-
-);
-
-
-if(!exists){
-
-merged.push({
-
-id:x.id,
-
-name:x.name,
-
-buckets:
-Number(x.buckets)||0,
-
-tonnes:
-Number(x.tonnes)||0,
-
-machine:
-x.machine||
-"Excavator",
-
-time:
-x.time||""
-
-});
-
-}
-
-});
-
-
-state.loads=
-merged;
-
-saveLocal();
-
-render();
-
-
-$("syncStatus").textContent=
-"☁️ Cloud history synced";
-
-},
-
-error=>{
-
-console.log(
-"Cloud sync:",
-error
-);
-
-$("syncStatus").textContent=
-"📱 Local history — cloud sync unavailable";
-
-}
-
-);
-
+      $("syncStatus").textContent =
+        "📱 Local history — cloud unavailable";
+    }
+  );
 }
 
 
-function startMachineSync(user){
+function startMachineSync(user) {
 
-if(stopMachineSync){
+  if (stopMachineSync) {
+    stopMachineSync();
+  }
 
-stopMachineSync();
 
-stopMachineSync=null;
+  const machineRef = doc(
+    db,
+    "users",
+    user.uid,
+    "settings",
+    "machine"
+  );
 
+
+  stopMachineSync = onSnapshot(
+    machineRef,
+
+    snapshot => {
+
+      if (!snapshot.exists()) {
+
+        $("machineStatus").textContent =
+          "No machine saved yet";
+
+        return;
+      }
+
+
+      const data = snapshot.data();
+
+
+      $("machineName").value =
+        data.machineName || "Excavator";
+
+      $("machineType").value =
+        data.machineType || "Excavator";
+
+      $("assetNumber").value =
+        data.assetNumber || "";
+
+      $("bucketSize").value =
+        Number(data.bucketSize) || 0.65;
+
+      $("target").value =
+        Number(data.target) || 2;
+
+
+      $("machineStatus").textContent =
+        "☁️ Machine settings synced";
+
+
+      render();
+    },
+
+    error => {
+
+      console.log(
+        "Machine settings error:",
+        error
+      );
+
+      $("machineStatus").textContent =
+        "📱 Machine settings available locally";
+    }
+  );
 }
 
 
-const ref=
-doc(
-db,
-"users",
-user.uid,
-"settings",
-"machine"
-);
+$("login").addEventListener(
+  "click",
+  async function() {
+
+    const email =
+      $("email").value.trim();
+
+    const password =
+      $("password").value;
 
 
-stopMachineSync=
-onSnapshot(
-
-ref,
-
-snap=>{
-
-if(snap.exists()){
-
-const x=
-snap.data();
+    $("loginError").textContent = "";
 
 
-$("machineName").value=
-x.machineName||
-"Excavator";
+    if (!email || !password) {
+
+      $("loginError").textContent =
+        "Enter your email and password.";
+
+      return;
+    }
 
 
-$("machineType").value=
-x.machineType||
-"Excavator";
+    $("login").disabled = true;
+
+    $("login").textContent =
+      "SIGNING IN…";
 
 
-$("assetNumber").value=
-x.assetNumber||"";
+    try {
 
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
 
-$("bucketSize").value=
-Number(x.bucketSize)||
-0.65;
+    } catch (error) {
 
+      console.log(
+        "Login error:",
+        error
+      );
 
-$("target").value=
-Number(x.target)||
-2;
+      $("loginError").textContent =
+        "Sign-in failed. Check your email and password.";
 
+    } finally {
 
-$("machineStatus").textContent=
-"☁️ Machine settings synced";
+      $("login").disabled = false;
 
-
-render();
-
-}else{
-
-$("machineStatus").textContent=
-"No machine saved yet";
-
-}
-
-},
-
-error=>{
-
-console.log(
-"Machine sync:",
-error
-);
-
-$("machineStatus").textContent=
-"📱 Machine settings available on this device";
-
-}
-
-);
-
-}
-
-
-$("saveMachine").onclick=
-async()=>{
-
-const user=
-auth.currentUser;
-
-
-const data={
-
-machineName:
-$("machineName")
-.value
-.trim()||
-"Excavator",
-
-machineType:
-$("machineType")
-.value
-.trim()||
-"Excavator",
-
-assetNumber:
-$("assetNumber")
-.value
-.trim(),
-
-bucketSize:
-val(
-"bucketSize",
-.65
-),
-
-target:
-val(
-"target",
-2
-),
-
-updatedAt:
-serverTimestamp()
-
-};
-
-
-try{
-
-if(user){
-
-await setDoc(
-
-doc(
-db,
-"users",
-user.uid,
-"settings",
-"machine"
-),
-
-data,
-
-{merge:true}
-
+      $("login").textContent =
+        "SIGN IN";
+    }
+  }
 );
 
 
-$("machineStatus").textContent=
-"☁️ Machine saved to PlantTrack";
+$("logout").addEventListener(
+  "click",
+  function() {
 
-}else{
+    signOut(auth);
 
-$("machineStatus").textContent=
-"Sign in to save machine settings";
-
-}
-
-
-render();
-
-}catch(e){
-
-$("machineStatus").textContent=
-"📱 Saved settings locally — cloud waiting";
-
-console.log(
-"Machine save:",
-e
-);
-
-}
-
-};
-
-
-$("login").onclick=
-async()=>{
-
-$("loginError").textContent="";
-
-
-const email=
-$("email")
-.value
-.trim();
-
-
-const password=
-$("password")
-.value;
-
-
-if(!email||!password){
-
-$("loginError").textContent=
-"Enter your email and password.";
-
-return;
-
-}
-
-
-try{
-
-$("login").disabled=true;
-
-$("login").textContent=
-"SIGNING IN…";
-
-
-await
-signInWithEmailAndPassword(
-auth,
-email,
-password
+  }
 );
 
 
-}catch(e){
+$("plus").addEventListener(
+  "click",
+  function() {
 
-$("loginError").textContent=
-"Sign-in failed. Check your email and password.";
+    currentBuckets++;
 
-}finally{
-
-$("login").disabled=false;
-
-$("login").textContent=
-"SIGN IN";
-
-}
-
-};
-
-
-$("logout").onclick=
-()=>signOut(auth);
-
-
-$("plus").onclick=
-()=>{
-
-currentBuckets++;
-
-render();
-
-};
-
-
-$("minus").onclick=
-()=>{
-
-if(currentBuckets)
-currentBuckets--;
-
-render();
-
-};
-
-
-$("finish").onclick=
-()=>{
-
-if(!currentBuckets){
-
-alert(
-"Add at least one bucket first."
-);
-
-return;
-
-}
-
-
-let name=
-prompt(
-"Name this load / customer:",
-""
+    render();
+  }
 );
 
 
-if(name===null)
-return;
+$("minus").addEventListener(
+  "click",
+  function() {
 
+    if (currentBuckets > 0) {
+      currentBuckets--;
+    }
 
-let bs=
-val(
-"bucketSize",
-.65
+    render();
+  }
 );
 
 
-let load={
+$("finish").addEventListener(
+  "click",
+  function() {
 
-name:
-name.trim()||
-"Unnamed load",
+    if (!currentBuckets) {
 
-buckets:
-currentBuckets,
+      alert(
+        "Add at least one bucket first."
+      );
 
-tonnes:
-currentBuckets*bs,
-
-machine:
-$("machineName")
-.value
-.trim()||
-"Excavator",
-
-time:
-new Date()
-.toLocaleTimeString(
-[],
-{
-hour:"2-digit",
-minute:"2-digit"
-}
-)
-
-};
+      return;
+    }
 
 
-state.loads.push(load);
-
-currentBuckets=0;
-
-saveLocal();
-
-render();
-
-cloudSave(load);
-
-};
+    const name =
+      prompt(
+        "Name this load / customer:",
+        ""
+      );
 
 
-$("reset").onclick=
-()=>{
+    if (name === null) {
+      return;
+    }
 
-if(
-confirm(
-"Reset today's loads? This cannot be undone locally."
-)
-){
 
-state={
-date:today(),
-loads:[]
-};
+    const bucketSize =
+      number("bucketSize", 0.65);
 
-currentBuckets=0;
 
-saveLocal();
+    const load = {
 
-render();
+      name:
+        name.trim() ||
+        "Unnamed load",
 
-}
+      buckets:
+        currentBuckets,
 
-};
+      tonnes:
+        currentBuckets * bucketSize,
+
+      machine:
+        $("machineName").value.trim() ||
+        "Excavator",
+
+      time:
+        new Date().toLocaleTimeString(
+          [],
+          {
+            hour: "2-digit",
+            minute: "2-digit"
+          }
+        )
+    };
+
+
+    state.loads.push(load);
+
+    currentBuckets = 0;
+
+    saveLocal();
+
+    render();
+
+    saveLoadToCloud(load);
+  }
+);
+
+
+$("saveMachine").addEventListener(
+  "click",
+  async function() {
+
+    const user =
+      auth.currentUser;
+
+
+    if (!user) {
+
+      $("machineStatus").textContent =
+        "Sign in to save machine settings";
+
+      return;
+    }
+
+
+    const data = {
+
+      machineName:
+        $("machineName").value.trim() ||
+        "Excavator",
+
+      machineType:
+        $("machineType").value.trim() ||
+        "Excavator",
+
+      assetNumber:
+        $("assetNumber").value.trim(),
+
+      bucketSize:
+        number("bucketSize", 0.65),
+
+      target:
+        number("target", 2),
+
+      updatedAt:
+        serverTimestamp()
+    };
+
+
+    try {
+
+      await setDoc(
+
+        doc(
+          db,
+          "users",
+          user.uid,
+          "settings",
+          "machine"
+        ),
+
+        data,
+
+        { merge: true }
+
+      );
+
+
+      $("machineStatus").textContent =
+        "☁️ Machine saved to PlantTrack";
+
+
+      render();
+
+    } catch (error) {
+
+      console.log(
+        "Machine save error:",
+        error
+      );
+
+      $("machineStatus").textContent =
+        "Machine could not be saved";
+
+    }
+  }
+);
+
+
+$("reset").addEventListener(
+  "click",
+  function() {
+
+    if (
+      confirm(
+        "Reset today's loads? This cannot be undone locally."
+      )
+    ) {
+
+      state = {
+        date: today(),
+        loads: []
+      };
+
+      currentBuckets = 0;
+
+      saveLocal();
+
+      render();
+    }
+  }
+);
 
 
 [
-"bucketSize",
-"target",
-"machineName"
-]
-.forEach(id=>
+  "machineName",
+  "bucketSize",
+  "target"
+].forEach(
+  id => {
 
-$(id)
-.addEventListener(
-"input",
-render
-)
+    $(id).addEventListener(
+      "input",
+      render
+    );
 
+  }
 );
-
-
-window.addEventListener(
-"online",
-()=>{
-
-$("syncStatus").textContent=
-"🌐 Online — PlantTrack ready";
-
-}
-);
-
-
-window.addEventListener(
-"offline",
-()=>{
-
-$("syncStatus").textContent=
-"📱 Offline — loads saved on this device";
-
-}
-);
-
-
-try{
-
-await enableIndexedDbPersistence(db);
-
-}catch(e){
-
-console.log(
-"Offline persistence:",
-e
-);
-
-}
 
 
 onAuthStateChanged(
-auth,
+  auth,
 
-user=>{
+  user => {
 
-if(user){
+    if (user) {
 
-$("loginCard")
-.classList
-.add("hidden");
+      $("loginCard")
+        .classList
+        .add("hidden");
 
-
-$("appArea")
-.classList
-.remove("hidden");
-
-
-$("signedInAs")
-.textContent=
-"Signed in: "+
-user.email;
+      $("appArea")
+        .classList
+        .remove("hidden");
 
 
-$("syncStatus").textContent=
-navigator.onLine
+      $("signedInAs").textContent =
+        "Signed in: " +
+        user.email;
 
-?
 
-"🌐 Online — PlantTrack connected"
+      $("syncStatus").textContent =
+        "🌐 Online — PlantTrack connected";
 
-:
 
-"📱 Offline — loads saved on this device";
+      render();
+
+      startLoadSync(user);
+
+      startMachineSync(user);
+
+    } else {
+
+      $("loginCard")
+        .classList
+        .remove("hidden");
+
+      $("appArea")
+        .classList
+        .add("hidden");
+
+
+      if (stopLoadSync) {
+        stopLoadSync();
+        stopLoadSync = null;
+      }
+
+
+      if (stopMachineSync) {
+        stopMachineSync();
+        stopMachineSync = null;
+      }
+    }
+  }
+);
 
 
 render();
 
-startCloudSync(user);
-
-startMachineSync(user);
-
-}else{
-
-if(stopCloudSync){
-
-stopCloudSync();
-
-stopCloudSync=null;
-
-}
-
-
-if(stopMachineSync){
-
-stopMachineSync();
-
-stopMachineSync=null;
-
-}
-
-
-$("loginCard")
-.classList
-.remove("hidden");
-
-
-$("appArea")
-.classList
-.add("hidden");
-
-}
-
-}
-);
-
-
-if(
-"serviceWorker"
-in navigator
-){
-
-window.addEventListener(
-"load",
-()=>{
-
-navigator.serviceWorker
-.register(
-"./sw.js",
-{scope:"./"}
-)
-.catch(
-()=>{}
-);
-
-}
-);
-
-}
-
 </script>
+
 
 </body>
   </html>
