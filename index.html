@@ -823,8 +823,11 @@ function render() {
             </div>
 
             <div class="muted">
+              ${escapeHtml(load.job || "")}
+              ${escapeHtml(load.customer || "")}
+              ${escapeHtml(load.location || "")}
+              ${escapeHtml(load.material || "")}
               ${escapeHtml(load.machine || "")}
-              •
               ${escapeHtml(load.time || "")}
             </div>
 
