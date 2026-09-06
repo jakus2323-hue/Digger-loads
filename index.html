@@ -621,16 +621,17 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js";
 
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  serverTimestamp,
-  onSnapshot,
-  query,
-  where,
-  doc,
-  setDoc
+getFirestore,
+collection,
+addDoc,
+serverTimestamp,
+onSnapshot,
+query,
+where,
+doc,
+setDoc,
+getDocs,
+deleteDoc
 } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
 
 
@@ -851,10 +852,11 @@ async function saveLoadToCloud(load) {
   try {
 
     const loadRef = doc(
-  collection(db, "loads")
+  db,
+  "loads",
+  load.id
 );
 
-load.id = loadRef.id;
 
 await setDoc(
   loadRef,
@@ -1250,8 +1252,11 @@ customer:
         )
     };
 
+const loadRef = doc(collection(db, "loads"));
 
-    state.loads.push(load);
+load.id = loadRef.id;
+
+state.loads.push(load);
 
     currentBuckets = 0;
 
@@ -1408,28 +1413,66 @@ $("saveMachine").addEventListener(
   }
 );
 
-
 $("reset").addEventListener(
   "click",
-  function() {
+  async function() {
 
     if (
-      confirm(
-        "Reset today's loads? This cannot be undone locally."
+      !confirm(
+        "Reset today's loads? This will remove today's loads from PlantTrack cloud too."
       )
     ) {
-
-      state = {
-        date: today(),
-        loads: []
-      };
-
-      currentBuckets = 0;
-
-      saveLocal();
-
-      render();
+      return;
     }
+
+    const user = auth.currentUser;
+
+    if (user) {
+
+      try {
+
+        const loadQuery = query(
+          collection(db, "loads"),
+          where("uid", "==", user.uid),
+          where("date", "==", today())
+        );
+
+        const snapshot = await getDocs(loadQuery);
+
+        await Promise.all(
+          snapshot.docs.map(
+            firebaseDoc =>
+              deleteDoc(
+                doc(db, "loads", firebaseDoc.id)
+              )
+          )
+        );
+
+      } catch (error) {
+
+        console.log(
+          "Reset cloud error:",
+          error
+        );
+
+        alert(
+          "Could not reset cloud loads."
+        );
+
+        return;
+      }
+    }
+
+    state = {
+      date: today(),
+      loads: []
+    };
+
+    currentBuckets = 0;
+
+    saveLocal();
+
+    render();
   }
 );
 
