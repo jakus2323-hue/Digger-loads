@@ -811,32 +811,36 @@ function render() {
       state.loads
         .slice()
         .reverse()
-        .map(load => `
+        .map((load, index) => `
 
-          <div class="load">
+  <div class="load">
 
-            <div class="loadname">
-              ${escapeHtml(load.name)}
-            </div>
+    <div class="loadname">
+      LOAD ${state.loads.length - index}
+    </div>
 
-            <div>
-              ${load.buckets} buckets —
-              ${Number(load.tonnes).toFixed(2)} t
-            </div>
+    <div>
+      <strong>${escapeHtml(load.name)}</strong>
+    </div>
 
-            <div class="muted">
-              ${escapeHtml(load.job || "")}
-              ${escapeHtml(load.customer || "")}
-              ${escapeHtml(load.location || "")}
-              ${escapeHtml(load.material || "")}
-              ${escapeHtml(load.machine || "")}
-              ${escapeHtml(load.time || "")}
-            </div>
+    <div class="muted">
+      🏗️ Job: ${escapeHtml(load.job || "No job")}<br>
+      👤 Customer: ${escapeHtml(load.customer || "No customer")}<br>
+      📍 Location: ${escapeHtml(load.location || "No location")}<br>
+      🪨 Material: ${escapeHtml(load.material || "No material")}<br>
+      🚜 Machine: ${escapeHtml(load.machine || "Excavator")}<br>
+      🕐 Time: ${escapeHtml(load.time || "")}
+    </div>
 
-          </div>
+    <div>
+      🪣 ${load.buckets} buckets —
+      <strong>${Number(load.tonnes).toFixed(2)} t</strong>
+    </div>
 
-        `)
-        .join("");
+  </div>
+
+`)
+.join("");
   }
 }
 
