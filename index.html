@@ -1197,12 +1197,16 @@ $("finish").addEventListener(
 
     const load = {
 
-      name:
-        name.trim() ||
-        "Unnamed load",
+  name:
+    name.trim() ||
+    "Unnamed load",
 
-      buckets:
-        currentBuckets,
+  job:
+    $("jobName").value.trim() ||
+    "No job",
+
+  buckets:
+    currentBuckets,
 
       tonnes:
         currentBuckets * bucketSize,
