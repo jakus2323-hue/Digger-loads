@@ -597,7 +597,26 @@ Load history
 
 </section>
 
+<section class="card">
 
+  <strong>📅 Previous Day</strong>
+
+  <input
+    id="historyDate"
+    type="date"
+  >
+
+  <button
+    id="loadHistoryDate"
+    class="primary"
+  >
+    VIEW DAY
+  </button>
+
+  <div id="previousHistory"></div>
+
+</section>
+  
 <button
 id="reset"
 class="danger">
@@ -1480,7 +1499,118 @@ $("reset").addEventListener(
     render();
   }
 );
+  
+$("loadHistoryDate").addEventListener(
+  "click",
+  async function() {
 
+    const selectedDate =
+      $("historyDate").value;
+
+    const user =
+      auth.currentUser;
+
+    if (!selectedDate || !user) {
+      return;
+    }
+
+    $("previousHistory").innerHTML =
+      "Loading...";
+
+    try {
+
+      const historyQuery = query(
+        collection(db, "loads"),
+        where("uid", "==", user.uid),
+        where("date", "==", selectedDate)
+      );
+
+      const snapshot =
+        await getDocs(historyQuery);
+
+      const loads =
+        snapshot.docs.map(doc => doc.data());
+
+      if (!loads.length) {
+
+        $("previousHistory").innerHTML =
+          "<div class='muted'>No loads recorded for this day.</div>";
+
+        return;
+      }
+
+      const totalBuckets =
+        loads.reduce(
+          (total, load) =>
+            total + Number(load.buckets || 0),
+          0
+        );
+
+      const totalTonnes =
+        loads.reduce(
+          (total, load) =>
+            total + Number(load.tonnes || 0),
+          0
+        );
+
+      $("previousHistory").innerHTML = `
+
+        <br>
+
+        <strong>
+          ${loads.length} loads —
+          ${totalBuckets} buckets —
+          ${totalTonnes.toFixed(2)} t
+        </strong>
+
+        <hr>
+
+        ${loads.map((load, index) => `
+
+          <div class="load">
+
+            <strong>
+              LOAD ${index + 1}
+            </strong>
+
+            <div>
+              ${escapeHtml(load.name || "Load")}
+            </div>
+
+            <div class="muted">
+              🏗️ Job: ${escapeHtml(load.job || "No job")}<br>
+              👤 Customer: ${escapeHtml(load.customer || "No customer")}<br>
+              📍 Location: ${escapeHtml(load.location || "No location")}<br>
+              🪨 Material: ${escapeHtml(load.material || "No material")}<br>
+              🚜 Machine: ${escapeHtml(load.machine || "Excavator")}<br>
+              🕐 Time: ${escapeHtml(load.time || "")}
+            </div>
+
+            <div>
+              🪣 ${load.buckets || 0} buckets —
+              <strong>
+                ${Number(load.tonnes || 0).toFixed(2)} t
+              </strong>
+            </div>
+
+          </div>
+
+        `).join("")}
+
+      `;
+
+    } catch (error) {
+
+      console.log(
+        "Previous history error:",
+        error
+      );
+
+      $("previousHistory").innerHTML =
+        "Could not load this day.";
+    }
+  }
+);
 
 [
   "machineName",
