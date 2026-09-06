@@ -1,8 +1,11 @@
 <!doctype html>
-<html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#111827"><link rel="manifest" href="./manifest.json">
-<title>Digger Loads</title>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827">
+<link rel="manifest" href="./manifest.json">
+<title>PlantTrack</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f2f4f7;color:#111827;font-family:Arial,sans-serif}
 .app{max-width:520px;margin:auto;padding:14px 16px 28px}h1{text-align:center;margin:8px 0 16px;font-size:28px}
@@ -16,10 +19,13 @@ input{width:100%;margin-top:5px;padding:13px;border:1px solid #cbd5e1;border-rad
 .stats{display:grid;grid-template-columns:repeat(3,1fr);text-align:center}.stat b{display:block;font-size:25px}
 .load{border-top:1px solid #e5e7eb;padding:11px 0}.load:first-child{border-top:0}.loadname{font-size:18px;font-weight:900}
 .muted{font-size:13px;color:#64748b;margin-top:3px}.empty{color:#64748b;padding-top:10px}
+.sync{font-size:13px;text-align:center;color:#64748b;margin:8px 0 14px}
 @media(max-width:360px){.row{grid-template-columns:1fr}.number{font-size:58px}}
-</style></head>
+</style>
+</head>
 <body><main class="app">
-<h1>🚜 Digger Loads</h1>
+<h1>🚜 PlantTrack</h1>
+<div id="syncStatus" class="sync">Local mode — ready</div>
 <section class="card"><div class="row">
 <label>Machine<input id="machine" value="Excavator" autocomplete="off"></label>
 <label>Bucket size (t)<input id="bucketSize" type="number" step="0.01" min="0.01" value="0.65"></label>
@@ -34,26 +40,58 @@ input{width:100%;margin-top:5px;padding:13px;border:1px solid #cbd5e1;border-rad
 <section class="card"><strong>Load history</strong><div id="history"></div></section>
 <button id="reset" class="danger">RESET TODAY</button>
 </main>
-<script>
-(()=>{"use strict";
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import {getFirestore,collection,addDoc,serverTimestamp,enableIndexedDbPersistence}
+from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+const firebaseConfig={
+ apiKey:"AIzaSyAhnQ5H8ZO6MrY2KdUIN_baTY18iJGvvk0",
+ authDomain:"planttrack-f1cd6.firebaseapp.com",
+ projectId:"planttrack-f1cd6",
+ storageBucket:"planttrack-f1cd6.firebasestorage.app",
+ messagingSenderId:"1033337379582",
+ appId:"1:1033337379582:web:bdd0315e9bf0ed9420e3af"
+};
+const app=initializeApp(firebaseConfig),db=getFirestore(app);
 const KEY="diggerLoadsV2",today=()=>new Date().toISOString().slice(0,10),$=id=>document.getElementById(id);
 let state;try{state=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){state=null}
-if(!state||state.date!==today())state={date:today(),loads:[]};let currentBuckets=0;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+if(!state||state.date!==today())state={date:today(),loads:[]};
+let currentBuckets=0;
+
+function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
 function val(id,f){let n=parseFloat($(id).value);return Number.isFinite(n)&&n>0?n:f}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function render(){
  let bs=val("bucketSize",.65),target=val("target",2),est=currentBuckets*bs;
- $("buckets").textContent=currentBuckets;$("estimate").textContent=est.toFixed(2)+" t";$("loadNo").textContent="Load "+(state.loads.length+1);
+ $("buckets").textContent=currentBuckets;$("estimate").textContent=est.toFixed(2)+" t";
+ $("loadNo").textContent="Load "+(state.loads.length+1);
  $("status").textContent=!currentBuckets?"Add a bucket":est<target-.05?"⬇ UNDER — "+(target-est).toFixed(2)+" t to target":est>target+.05?"⬆ OVER — "+(est-target).toFixed(2)+" t over target":"✅ ON TARGET";
- let b=0,t=0;state.loads.forEach(x=>{b+=x.buckets;t+=x.tonnes});$("totalLoads").textContent=state.loads.length;$("totalBuckets").textContent=b;$("totalTonnes").textContent=t.toFixed(2);
- $("history").innerHTML=state.loads.length?state.loads.slice().reverse().map(x=>`<div class="load"><div class="loadname">${esc(x.name)}</div><div>${x.buckets} buckets — ${x.tonnes.toFixed(2)} t</div><div class="muted">${esc(x.machine)} • ${esc(x.time)}</div></div>`).join(""):'<div class="empty">No loads recorded yet.</div>';
+ let b=0,t=0;state.loads.forEach(x=>{b+=x.buckets;t+=x.tonnes});
+ $("totalLoads").textContent=state.loads.length;$("totalBuckets").textContent=b;$("totalTonnes").textContent=t.toFixed(2);
+ $("history").innerHTML=state.loads.length?state.loads.slice().reverse().map(x=>`<div class="load"><div class="loadname">${esc(x.name)}</div><div>${x.buckets} buckets — ${Number(x.tonnes).toFixed(2)} t</div><div class="muted">${esc(x.machine)} • ${esc(x.time)}</div></div>`).join(""):'<div class="empty">No loads recorded yet.</div>';
 }
-$("plus").onclick=()=>{currentBuckets++;render()};$("minus").onclick=()=>{if(currentBuckets)currentBuckets--;render()};
-$("finish").onclick=()=>{if(!currentBuckets){alert("Add at least one bucket first.");return}let name=prompt("Name this load / customer:","");if(name===null)return;
-let bs=val("bucketSize",.65);state.loads.push({name:name.trim()||"Unnamed load",buckets:currentBuckets,tonnes:currentBuckets*bs,machine:$("machine").value.trim()||"Excavator",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});currentBuckets=0;save();render()};
-$("reset").onclick=()=>{if(confirm("Reset today's loads? This cannot be undone.")){state={date:today(),loads:[]};currentBuckets=0;save();render()}};
-["bucketSize","target"].forEach(id=>$(id).addEventListener("input",render));render();
+async function cloudSave(load){
+ if(!navigator.onLine)return;
+ try{
+  await addDoc(collection(db,"loads"),{...load,date:today(),createdAt:serverTimestamp()});
+  $("syncStatus").textContent="☁️ Saved to PlantTrack cloud";
+ }catch(e){$("syncStatus").textContent="📱 Saved on device — cloud waiting";console.log(e)}
+}
+$("plus").onclick=()=>{currentBuckets++;render()};
+$("minus").onclick=()=>{if(currentBuckets)currentBuckets--;render()};
+$("finish").onclick=()=>{
+ if(!currentBuckets){alert("Add at least one bucket first.");return}
+ let name=prompt("Name this load / customer:","");if(name===null)return;
+ let bs=val("bucketSize",.65),load={name:name.trim()||"Unnamed load",buckets:currentBuckets,tonnes:currentBuckets*bs,machine:$("machine").value.trim()||"Excavator",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})};
+ state.loads.push(load);currentBuckets=0;saveLocal();render();cloudSave(load);
+};
+$("reset").onclick=()=>{if(confirm("Reset today's loads? This cannot be undone locally.")){state={date:today(),loads:[]};currentBuckets=0;saveLocal();render()}};
+["bucketSize","target"].forEach(id=>$(id).addEventListener("input",render));
+window.addEventListener("online",()=>{$("syncStatus").textContent="🌐 Online — PlantTrack ready"});
+window.addEventListener("offline",()=>{$("syncStatus").textContent="📱 Offline — loads saved on this device"});
+try{await enableIndexedDbPersistence(db)}catch(e){console.log("Offline persistence:",e)}
+$("syncStatus").textContent=navigator.onLine?"🌐 Online — PlantTrack connected":"📱 Offline — loads saved on this device";
+render();
 if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{scope:"./"}).catch(()=>{}));
-})();
 </script></body></html>
