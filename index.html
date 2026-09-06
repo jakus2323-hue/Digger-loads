@@ -1,199 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111827">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111827"><link rel="manifest" href="./manifest.json">
 <title>Digger Loads</title>
-<link rel="manifest" href="manifest.json">
 <style>
-*{box-sizing:border-box}
-body{margin:0;background:#f2f4f7;color:#111827;font-family:Arial,sans-serif}
-.app{max-width:520px;margin:auto;padding:16px}
-h1{text-align:center;font-size:28px;margin:8px 0 18px}
-.card{background:white;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 2px 8px #00000012}
-label{font-weight:700;font-size:14px;display:block;margin-bottom:5px}
-input{width:100%;padding:13px;border:1px solid #cbd5e1;border-radius:10px;font-size:17px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.current{text-align:center}
-.small{font-size:14px;color:#64748b}
-.number{font-size:68px;font-weight:900;margin:4px 0}
-.tonnes{font-size:23px;font-weight:800}
-.status{margin:12px 0;padding:12px;border-radius:12px;font-weight:800}
-.buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-button{border:0;border-radius:13px;padding:17px 10px;font-size:18px;font-weight:800;background:#e5e7eb}
-.add{background:#111827;color:white;font-size:25px}
-.finish{width:100%;margin-top:10px;background:#16a34a;color:white}
-.reset{width:100%;margin-top:10px;background:#fee2e2;color:#991b1b}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;gap:8px}
-.stat b{display:block;font-size:25px}
-.history{font-size:16px;border-top:1px solid #e5e7eb;padding:10px 0}
-</style>
-</head>
-
-<body>
-<div class="app">
-
+*{box-sizing:border-box}body{margin:0;background:#f2f4f7;color:#111827;font-family:Arial,sans-serif}
+.app{max-width:520px;margin:auto;padding:14px 16px 28px}h1{text-align:center;margin:8px 0 16px;font-size:28px}
+.card{background:#fff;border-radius:18px;padding:15px;margin-bottom:13px;box-shadow:0 2px 8px #0001}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{font-size:14px;font-weight:800}
+input{width:100%;margin-top:5px;padding:13px;border:1px solid #cbd5e1;border-radius:11px;font-size:17px;background:#fff}
+.current{text-align:center}.small{font-size:14px;color:#64748b}.number{font-size:66px;font-weight:900;line-height:1.05;margin:5px 0}
+.tonnes{font-size:22px;font-weight:800}.status{padding:11px;border-radius:11px;margin:10px 0;font-weight:800}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:9px}button{min-height:58px;border:0;border-radius:13px;padding:12px 8px;font-size:17px;font-weight:800}
+.add{background:#111827;color:#fff}.finish{width:100%;margin-top:9px;background:#16a34a;color:#fff}.danger{width:100%;background:#fee2e2;color:#991b1b}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);text-align:center}.stat b{display:block;font-size:25px}
+.load{border-top:1px solid #e5e7eb;padding:11px 0}.load:first-child{border-top:0}.loadname{font-size:18px;font-weight:900}
+.muted{font-size:13px;color:#64748b;margin-top:3px}.empty{color:#64748b;padding-top:10px}
+@media(max-width:360px){.row{grid-template-columns:1fr}.number{font-size:58px}}
+</style></head>
+<body><main class="app">
 <h1>🚜 Digger Loads</h1>
-
-<div class="card">
-<div class="row">
-<div>
-<label>Machine</label>
-<input id="machine" value="Excavator">
-</div>
-<div>
-<label>Bucket (t)</label>
-<input id="bucketSize" type="number" step="0.01" value="0.65">
-</div>
-</div>
-<br>
-<label>Target per load (t)</label>
-<input id="target" type="number" step="0.05" value="2.00">
-</div>
-
-<div class="card current">
-<div class="small">CURRENT LOAD</div>
-<div id="loadNo" class="small">Load 1</div>
-
-<div class="number" id="buckets">0</div>
-<div class="small">BUCKETS</div>
-
-<div class="tonnes" id="estimate">0.00 t</div>
-
-<div class="status" id="status">Add a bucket</div>
-
-<div class="buttons">
-<button onclick="changeBucket(-1)">− BUCKET</button>
-<button class="add" onclick="changeBucket(1)">+ BUCKET</button>
-</div>
-
-<button class="finish" onclick="finishLoad()">✅ FINISH LOAD</button>
-</div>
-
-<div class="card">
-<div class="small">TODAY'S TOTAL</div>
-<div class="stats">
-<div class="stat"><b id="totalLoads">0</b>Loads</div>
-<div class="stat"><b id="totalBuckets">0</b>Buckets</div>
-<div class="stat"><b id="totalTonnes">0.00</b>Tonnes</div>
-</div>
-</div>
-
-<div class="card">
-<b>Load history</b>
-<div id="history"></div>
-</div>
-
-<button class="reset" onclick="resetDay()">RESET TODAY</button>
-
-</div>
-
+<section class="card"><div class="row">
+<label>Machine<input id="machine" value="Excavator" autocomplete="off"></label>
+<label>Bucket size (t)<input id="bucketSize" type="number" step="0.01" min="0.01" value="0.65"></label>
+</div><br><label>Target per load (t)<input id="target" type="number" step="0.05" min="0.01" value="2.00"></label></section>
+<section class="card current"><div class="small">CURRENT LOAD</div><div id="loadNo" class="small">Load 1</div>
+<div class="number" id="buckets">0</div><div class="small">BUCKETS</div><div class="tonnes" id="estimate">0.00 t</div>
+<div class="status" id="status">Add a bucket</div><div class="buttons">
+<button id="minus">− BUCKET</button><button id="plus" class="add">+ BUCKET</button></div>
+<button id="finish" class="finish">✅ FINISH LOAD</button></section>
+<section class="card"><div class="small">TODAY'S TOTAL</div><div class="stats">
+<div class="stat"><b id="totalLoads">0</b>Loads</div><div class="stat"><b id="totalBuckets">0</b>Buckets</div><div class="stat"><b id="totalTonnes">0.00</b>Tonnes</div></div></section>
+<section class="card"><strong>Load history</strong><div id="history"></div></section>
+<button id="reset" class="danger">RESET TODAY</button>
+</main>
 <script>
-const key="diggerLoadsData";
-let data=JSON.parse(localStorage.getItem(key)||'{"date":"","loads":[]}');
-let today=new Date().toISOString().slice(0,10);
-
-if(data.date!==today){
-data={date:today,loads:[]};
-save();
-}
-
-let currentBuckets=0;
-
-function save(){
-localStorage.setItem(key,JSON.stringify(data));
-}
-
-function bucketSize(){
-let n=parseFloat(document.getElementById("bucketSize").value);
-return n>0?n:0.65;
-}
-
-function target(){
-let n=parseFloat(document.getElementById("target").value);
-return n>0?n:2;
-}
-
-function changeBucket(amount){
-currentBuckets=Math.max(0,currentBuckets+amount);
-render();
-}
-
-function finishLoad(){
-if(currentBuckets<1)return;
-
-let tonnes=currentBuckets*bucketSize();
-
-data.loads.push({
-buckets:currentBuckets,
-tonnes:tonnes,
-machine:document.getElementById("machine").value,
-time:new Date().toLocaleTimeString([],{
-hour:"2-digit",
-minute:"2-digit"
-})
-});
-
-currentBuckets=0;
-save();
-render();
-}
-
-function resetDay(){
-if(confirm("Reset today's loads?")){
-data.loads=[];
-currentBuckets=0;
-save();
-render();
-}
-}
-
+(()=>{"use strict";
+const KEY="diggerLoadsV2",today=()=>new Date().toISOString().slice(0,10),$=id=>document.getElementById(id);
+let state;try{state=JSON.parse(localStorage.getItem(KEY)||"null")}catch(e){state=null}
+if(!state||state.date!==today())state={date:today(),loads:[]};let currentBuckets=0;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}}
+function val(id,f){let n=parseFloat($(id).value);return Number.isFinite(n)&&n>0?n:f}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function render(){
-let estimate=currentBuckets*bucketSize();
-
-document.getElementById("buckets").textContent=currentBuckets;
-document.getElementById("estimate").textContent=estimate.toFixed(2)+" t";
-document.getElementById("loadNo").textContent="Load "+(data.loads.length+1);
-
-let status=document.getElementById("status");
-
-if(currentBuckets===0){
-status.textContent="Add a bucket";
-}else if(estimate<target()-0.05){
-status.textContent="⬇ UNDER — "+(target()-estimate).toFixed(2)+" t to target";
-}else if(estimate>target()+0.05){
-status.textContent="⬆ OVER — "+(estimate-target()).toFixed(2)+" t over target";
-}else{
-status.textContent="✅ ON TARGET";
+ let bs=val("bucketSize",.65),target=val("target",2),est=currentBuckets*bs;
+ $("buckets").textContent=currentBuckets;$("estimate").textContent=est.toFixed(2)+" t";$("loadNo").textContent="Load "+(state.loads.length+1);
+ $("status").textContent=!currentBuckets?"Add a bucket":est<target-.05?"⬇ UNDER — "+(target-est).toFixed(2)+" t to target":est>target+.05?"⬆ OVER — "+(est-target).toFixed(2)+" t over target":"✅ ON TARGET";
+ let b=0,t=0;state.loads.forEach(x=>{b+=x.buckets;t+=x.tonnes});$("totalLoads").textContent=state.loads.length;$("totalBuckets").textContent=b;$("totalTonnes").textContent=t.toFixed(2);
+ $("history").innerHTML=state.loads.length?state.loads.slice().reverse().map(x=>`<div class="load"><div class="loadname">${esc(x.name)}</div><div>${x.buckets} buckets — ${x.tonnes.toFixed(2)} t</div><div class="muted">${esc(x.machine)} • ${esc(x.time)}</div></div>`).join(""):'<div class="empty">No loads recorded yet.</div>';
 }
-
-let totalBuckets=data.loads.reduce((a,l)=>a+l.buckets,0);
-let totalTonnes=data.loads.reduce((a,l)=>a+l.tonnes,0);
-
-document.getElementById("totalLoads").textContent=data.loads.length;
-document.getElementById("totalBuckets").textContent=totalBuckets;
-document.getElementById("totalTonnes").textContent=totalTonnes.toFixed(2);
-
-let history=document.getElementById("history");
-
-if(data.loads.length===0){
-history.innerHTML='<div class="small" style="margin-top:10px">No loads recorded yet.</div>';
-}else{
-history.innerHTML=data.loads.map((l,i)=>
-'<div class="history">Load '+(i+1)+' — <b>'+l.buckets+
-' buckets</b> — '+l.tonnes.toFixed(2)+' t<br><span class="small">'+
-l.machine+' • '+l.time+'</span></div>'
-).reverse().join("");
-}
-}
-
-document.getElementById("bucketSize").addEventListener("input",render);
-document.getElementById("target").addEventListener("input",render);
-
-render();
-</script>
-
-</body>
-</html>
+$("plus").onclick=()=>{currentBuckets++;render()};$("minus").onclick=()=>{if(currentBuckets)currentBuckets--;render()};
+$("finish").onclick=()=>{if(!currentBuckets){alert("Add at least one bucket first.");return}let name=prompt("Name this load / customer:","");if(name===null)return;
+let bs=val("bucketSize",.65);state.loads.push({name:name.trim()||"Unnamed load",buckets:currentBuckets,tonnes:currentBuckets*bs,machine:$("machine").value.trim()||"Excavator",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});currentBuckets=0;save();render()};
+$("reset").onclick=()=>{if(confirm("Reset today's loads? This cannot be undone.")){state={date:today(),loads:[]};currentBuckets=0;save();render()}};
+["bucketSize","target"].forEach(id=>$(id).addEventListener("input",render));render();
+if("serviceWorker"in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js",{scope:"./"}).catch(()=>{}));
+})();
+</script></body></html>
