@@ -313,7 +313,58 @@ id="dayMachine">
 
 
 <section class="card">
+<section class="card">
 
+<h2>🏗️ Current Job</h2>
+
+<label>
+Job / site name
+<input
+id="jobName"
+autocomplete="off"
+placeholder="e.g. Bodmin Quarry">
+</label>
+
+<label>
+Customer
+<input
+id="jobCustomer"
+autocomplete="off"
+placeholder="Customer name">
+</label>
+
+<label>
+Location
+<input
+id="jobLocation"
+autocomplete="off"
+placeholder="Site location">
+</label>
+
+<label>
+Material
+<input
+id="jobMaterial"
+autocomplete="off"
+placeholder="e.g. Cornish slate">
+</label>
+
+<button
+id="saveJob"
+class="primary">
+
+SAVE JOB
+
+</button>
+
+<div
+id="jobStatus"
+class="small"
+style="margin-top:8px">
+
+</div>
+
+</section>
 <h2>🚜 My Machine</h2>
 
 <label>
@@ -1134,7 +1185,71 @@ $("finish").addEventListener(
   }
 );
 
+$("saveJob").addEventListener(
+  "click",
+  async function() {
 
+    const user = auth.currentUser;
+
+    if (!user) {
+      $("jobStatus").textContent =
+        "Sign in to save the job";
+      return;
+    }
+
+    const job = {
+      jobName:
+        $("jobName").value.trim(),
+
+      customer:
+        $("jobCustomer").value.trim(),
+
+      location:
+        $("jobLocation").value.trim(),
+
+      material:
+        $("jobMaterial").value.trim(),
+
+      updatedAt:
+        serverTimestamp()
+    };
+
+    if (!job.jobName) {
+      $("jobStatus").textContent =
+        "Enter a job / site name first";
+      return;
+    }
+
+    try {
+
+      await setDoc(
+        doc(
+          db,
+          "users",
+          user.uid,
+          "settings",
+          "job"
+        ),
+        job,
+        {merge:true}
+      );
+
+      $("jobStatus").textContent =
+        "☁️ Job saved to PlantTrack";
+
+    } catch (error) {
+
+      console.log(
+        "Job save error:",
+        error
+      );
+
+      $("jobStatus").textContent =
+        "Job could not be saved";
+    }
+  }
+);
+  
 $("saveMachine").addEventListener(
   "click",
   async function() {
