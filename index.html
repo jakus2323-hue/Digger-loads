@@ -850,23 +850,29 @@ async function saveLoadToCloud(load) {
 
   try {
 
-    await addDoc(
-      collection(db, "loads"),
-      {
-        name: load.name,
-        buckets: load.buckets,
-        tonnes: load.tonnes,
-        machine: load.machine,
-        job: load.job,
-customer: load.customer,
-location: load.location,
-material: load.material,
-        time: load.time,
-        date: today(),
-        uid: user.uid,
-        createdAt: serverTimestamp()
-      }
-    );
+    const loadRef = doc(
+  collection(db, "loads")
+);
+
+load.id = loadRef.id;
+
+await setDoc(
+  loadRef,
+  {
+    name: load.name,
+    buckets: load.buckets,
+    tonnes: load.tonnes,
+    machine: load.machine,
+    job: load.job,
+    customer: load.customer,
+    location: load.location,
+    material: load.material,
+    time: load.time,
+    date: today(),
+    uid: user.uid,
+    createdAt: serverTimestamp()
+  }
+);
 
 
     $("syncStatus").textContent =
