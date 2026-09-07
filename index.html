@@ -1649,7 +1649,33 @@ $("loadHistoryDate").addEventListener(
   }
 );
 
+function showPage(pageId) {
 
+  const pages = [
+    "todayPage",
+    "historyPage",
+    "reportsPage",
+    "machinesPage",
+    "farmingPage"
+  ];
+
+  pages.forEach(id => {
+
+    const page = $(id);
+
+    if (page) {
+      page.classList.add("hidden");
+    }
+
+  });
+
+  const selected = $(pageId);
+
+  if (selected) {
+    selected.classList.remove("hidden");
+  }
+}
+  
 onAuthStateChanged(
   auth,
 
