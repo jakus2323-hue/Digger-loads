@@ -649,6 +649,63 @@ RESET TODAY
 
 </section>
 
+<section id="historyPage" class="hidden">
+
+<h2>📅 History</h2>
+
+<p class="small">
+View loads from previous days.
+</p>
+<section class="card">
+
+<strong>📅 Select a day</strong>
+
+<input
+  id="historyPageDate"
+  type="date"
+>
+
+<button
+  id="historyPageLoad"
+  class="primary"
+>
+VIEW DAY
+</button>
+
+<div id="historyPageResults"></div>
+
+</section>
+</section>
+<section id="reportsPage" class="hidden">
+
+  <h2>📊 Reports</h2>
+
+  <section class="card">
+    <strong>Today's Report</strong>
+
+    <div class="stats" style="margin-top:15px">
+
+      <div class="stat">
+        <b id="reportLoads">0</b>
+        Loads
+      </div>
+
+      <div class="stat">
+        <b id="reportBuckets">0</b>
+        Buckets
+      </div>
+
+      <div class="stat">
+        <b id="reportTonnes">0.00</b>
+        Tonnes
+      </div>
+
+    </div>
+
+  </section>
+
+</section>
+</section>
 </main>
 
 <script type="module">
@@ -1633,8 +1690,228 @@ $("loadHistoryDate").addEventListener(
     }
   }
 );
+$("historyPageLoad").addEventListener(
+  "click",
+  async function() {
 
-[
+    const selectedDate =
+      $("historyPageDate").value;
+
+    const user =
+      auth.currentUser;
+
+    if (!selectedDate || !user) {
+      return;
+    }
+
+    $("historyPageResults").innerHTML =
+      "Loading...";
+
+    try {
+
+      const historyQuery = query(
+        collection(db, "loads"),
+        where("uid", "==", user.uid),
+        where("date", "==", selectedDate)
+      );
+
+      const snapshot =
+        await getDocs(historyQuery);
+
+      const loads =
+        snapshot.docs.map(doc => doc.data());
+
+      if (!loads.length) {
+
+        $("historyPageResults").innerHTML =
+          "<div class='empty'>No loads recorded for this day.</div>";
+
+        return;
+      }
+
+      const totalBuckets =
+        loads.reduce(
+          (total, load) =>
+            total + Number(load.buckets || 0),
+          0
+        );
+
+      const totalTonnes =
+        loads.reduce(
+          (total, load) =>
+            total + Number(load.tonnes || 0),
+          0
+        );
+
+      $("historyPageResults").innerHTML = `
+
+        <br>
+
+        <strong>
+          ${loads.length} loads —
+          ${totalBuckets} buckets —
+          ${totalTonnes.toFixed(2)} t
+        </strong>
+
+        <hr>
+
+        ${loads.map((load, index) => `
+
+          <div class="load">
+
+            <strong>
+              LOAD ${index + 1}
+            </strong>
+
+            <div>
+              ${escapeHtml(load.name || "Load")}
+            </div>
+
+            <div class="muted">
+              🏗️ Job: ${escapeHtml(load.job || "No job")}<br>
+              👤 Customer: ${escapeHtml(load.customer || "No customer")}<br>
+              📍 Location: ${escapeHtml(load.location || "No location")}<br>
+              🪨 Material: ${escapeHtml(load.material || "No material")}<br>
+              🚜 Machine: ${escapeHtml(load.machine || "Excavator")}<br>
+              🕐 Time: ${escapeHtml(load.time || "")}
+            </div>
+
+            <div>
+              🪣 ${load.buckets || 0} buckets —
+              <strong>
+                ${Number(load.tonnes || 0).toFixed(2)} t
+              </strong>
+            </div>
+
+          </div>
+
+        `).join("")}
+
+      `;
+
+    } catch (error) {
+
+      console.log(
+        "History page error:",
+        error
+      );
+
+      $("historyPageResults").innerHTML =
+        "Could not load this day.";
+    }
+  }
+);$("historyPageLoad").addEventListener(
+  "click",
+  async function() {
+
+    const selectedDate =
+      $("historyPageDate").value;
+
+    const user =
+      auth.currentUser;
+
+    if (!selectedDate || !user) {
+      return;
+    }
+
+    $("historyPageResults").innerHTML =
+      "Loading...";
+
+    try {
+
+      const historyQuery = query(
+        collection(db, "loads"),
+        where("uid", "==", user.uid),
+        where("date", "==", selectedDate)
+      );
+
+      const snapshot =
+        await getDocs(historyQuery);
+
+      const loads =
+        snapshot.docs.map(doc => doc.data());
+
+      if (!loads.length) {
+
+        $("historyPageResults").innerHTML =
+          "<div class='empty'>No loads recorded for this day.</div>";
+
+        return;
+      }
+
+      const totalBuckets =
+        loads.reduce(
+          (total, load) =>
+            total + Number(load.buckets || 0),
+          0
+        );
+
+      const totalTonnes =
+        loads.reduce(
+          (total, load) =>
+            total + Number(load.tonnes || 0),
+          0
+        );
+
+      $("historyPageResults").innerHTML = `
+
+        <br>
+
+        <strong>
+          ${loads.length} loads —
+          ${totalBuckets} buckets —
+          ${totalTonnes.toFixed(2)} t
+        </strong>
+
+        <hr>
+
+        ${loads.map((load, index) => `
+
+          <div class="load">
+
+            <strong>
+              LOAD ${index + 1}
+            </strong>
+
+            <div>
+              ${escapeHtml(load.name || "Load")}
+            </div>
+
+            <div class="muted">
+              🏗️ Job: ${escapeHtml(load.job || "No job")}<br>
+              👤 Customer: ${escapeHtml(load.customer || "No customer")}<br>
+              📍 Location: ${escapeHtml(load.location || "No location")}<br>
+              🪨 Material: ${escapeHtml(load.material || "No material")}<br>
+              🚜 Machine: ${escapeHtml(load.machine || "Excavator")}<br>
+              🕐 Time: ${escapeHtml(load.time || "")}
+            </div>
+
+            <div>
+              🪣 ${load.buckets || 0} buckets —
+              <strong>
+                ${Number(load.tonnes || 0).toFixed(2)} t
+              </strong>
+            </div>
+
+          </div>
+
+        `).join("")}
+
+      `;
+
+    } catch (error) {
+
+      console.log(
+        "History page error:",
+        error
+      );
+
+      $("historyPageResults").innerHTML =
+        "Could not load this day.";
+    }
+  }
+);
+[ 
   "machineName",
   "bucketSize",
   "target"
