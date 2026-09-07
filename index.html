@@ -180,7 +180,19 @@ min-height:44px;
 font-size:14px;
 padding:8px 12px
 }
+  
+.appnav{
+display:flex;
+gap:6px;
+margin-bottom:15px;
+}
 
+.appnav button{
+flex:1;
+min-height:48px;
+padding:6px 4px;
+font-size:12px;
+}
 .hidden{
 display:none
 }
@@ -236,6 +248,16 @@ SIGN IN
 
 <section id="appArea" class="hidden">
 
+  <nav class="appnav">
+
+  <button onclick="showPage('todayPage')">🏠 Today</button>
+  <button onclick="showPage('historyPage')">📅 History</button>
+  <button onclick="showPage('reportsPage')">📊 Reports</button>
+  <button onclick="showPage('machinesPage')">🚜 Machines</button>
+  <button onclick="showPage('farmingPage')">🌾 Farming</button>
+
+</nav>
+  
 <div class="userbar">
 
 <div class="small" id="signedInAs"></div>
