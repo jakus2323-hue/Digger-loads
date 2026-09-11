@@ -889,6 +889,9 @@ function render() {
   $("dayTonnes").textContent =
     tonnes.toFixed(2);
 
+$("reportLoads").textContent = state.loads.length;
+$("reportBuckets").textContent = buckets;
+$("reportTonnes").textContent = tonnes.toFixed(2);
 
   $("dayAverage").textContent =
     state.loads.length
