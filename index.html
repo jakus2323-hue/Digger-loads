@@ -915,7 +915,8 @@ function render() {
 $("reportLoads").textContent = state.loads.length;
 $("reportBuckets").textContent = buckets;
 $("reportTonnes").textContent = tonnes.toFixed(2);
-
+updateWeeklyReport();
+  
   $("dayAverage").textContent =
     state.loads.length
       ? (tonnes / state.loads.length).toFixed(2) + " t"
@@ -970,7 +971,52 @@ $("reportTonnes").textContent = tonnes.toFixed(2);
   }
 }
 
+async function updateWeeklyReport() {
 
+  const user = auth.currentUser;
+
+  if (!user) return;
+
+  const snapshot = await getDocs(
+    query(
+      collection(db, "loads"),
+      where("uid", "==", user.uid)
+    )
+  );
+
+  const now = new Date();
+  const day = now.getDay();
+  const daysFromMonday = day === 0 ? 6 : day - 1;
+
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - daysFromMonday);
+
+  const mondayDate = monday.toISOString().slice(0, 10);
+
+  let weekLoads = 0;
+  let weekBuckets = 0;
+  let weekTonnes = 0;
+
+  snapshot.docs.forEach(firebaseDoc => {
+
+    const data = firebaseDoc.data();
+
+    if (data.date >= mondayDate && data.date <= today()) {
+
+      weekLoads++;
+      weekBuckets += Number(data.buckets) || 0;
+      weekTonnes += Number(data.tonnes) || 0;
+
+    }
+
+  });
+
+  $("reportWeekLoads").textContent = weekLoads;
+  $("reportWeekBuckets").textContent = weekBuckets;
+  $("reportWeekTonnes").textContent =
+    weekTonnes.toFixed(2);
+
+}
 async function saveLoadToCloud(load) {
 
   const user = auth.currentUser;
